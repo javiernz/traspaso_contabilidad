@@ -18,34 +18,37 @@
     <main>
       <div class="text-secondary text-center">
         <div class="py-5">
-          <h1 class="display-5 fw-bold text-white">Traspasos Grime</h1>
+          <h1 class="display-5 fw-bold text-white">Traspasos Grime/A3</h1>
           <div class="col-lg-12 mx-auto">
             <div id="cargando" class="spinner-border d-none" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
             <div id="importador" class="input-group w-50 m-3 mx-auto">
-              <input type="file" class="form-control btn-lg me-sm-3 fw-bold" onchange="myDisplay()">
+              <input type="file" class="form-control btn-lg me-sm-3 fw-bold" onchange="traspasar()">
             </div>
             <div id="content" class="p-5">
-              <table id="tabla" class="table table-hover table-dark d-none">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Cliente</th>
-                    <th scope="col">Factura</th>
-                    <th scope="col">Cuenta</th>
-                    <th scope="col">Contrapartida</th>
-                    <th scope="col">Importe</th>
-                  </tr>
-                </thead>
-                <tbody id="cuerpotabla">
-                </tbody>
-              </table>
+              <div>
+                <table id="tabla" class="table table-hover table-dark d-none">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">Fecha</th>
+                      <th scope="col">Cliente</th>
+                      <th scope="col">Factura</th>
+                      <th scope="col" class="text-end">Cuenta</th>
+                      <th scope="col" class="text-end">Contrapartida</th>
+                      <th scope="col" class="text-end">Importe</th>
+                      <th scope="col" class="text-end">Cobrador</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cuerpotabla">
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
               <button type="button" id="nuevo" class="btn btn-outline-light btn-lg px-4 mt-3 d-none" onclick="location.href='/';">Nuevo</button>
-              <button type="button" id="descargar" class="btn btn-outline-success btn-lg px-4 mt-3 d-none" onclick="createFile()">Descargar</button>
+              <button type="button" id="descargar" class="btn btn-outline-success btn-lg px-4 mt-3 d-none" onclick="crearArchivo()">Descargar</button>
             </div>
           </div>
         </div>
