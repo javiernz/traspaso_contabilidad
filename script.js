@@ -1,5 +1,5 @@
 // Variables globales
-var datafile = []; // Archivo final para descargar, contiene las líneas de asientos 
+var datafile = []; // Archivo de datos final para descargar, contiene todas las líneas de todos los asientos 
 var datacliente = {};  // Ojbeto que almacena los datos de los clientes sacados del archivo csv
 var numero = 0;
 var datosexportar = {}; //
@@ -28,10 +28,10 @@ function crearArchivo()
   // Crea el archivo blob y una url para descargarlo  
   var blob = new Blob([datafile.join('\n')], {type:'text/html',endings:'native'});
 
-  //crea una url para descargar el archivo
+  // Crea una url para descargar el archivo
   url = window.URL.createObjectURL(blob);
 
-  //crea un enlace oculto con el nombre del archivo, y lo descarga
+  // Crea un enlace oculto con el nombre del archivo, y lo descarga
   var a = document.createElement('a');
   a.style = 'display: none';
   a.href = url;
@@ -61,7 +61,7 @@ async function traspasar()
     	'load',
     	() =>
       {
-        // vacía el archivo de datos
+        // Vacía el archivo de datos
         while (datafile.length > 0)
         {
           datafile.pop();
@@ -146,7 +146,8 @@ function anadeLinea(objeto)
     {
       for (let k in objeto[i][j])
       {
-        // Crea el apunte de contrapartida del asiento, es el que abre el asiento y va en el Debe con el total del tipo de cobro
+        // Crea el apunte de contrapartida del asiento, es el que abre el asiento (linea 'M') y va en el Debe,
+        // con el total del tipo de cobro
         
         let formato = '4';  // Formato del apunte, siempre 4
         let empresa = '00026'; // Código de empresa, 00026 es Bodega Gayda
@@ -155,9 +156,9 @@ function anadeLinea(objeto)
         let cuenta = k;  // Cuenta del tipo de cobro
         let descripcion = ''; // Descripción de la cuenta, siempre vacío
         let tipo = 'D'; // En el Debe
-        let referencia = 'L'; // Referencia del apunte
+        let referencia = nombreCobrador(j).substring(0,9); // Referencia del apunte
         let linea = 'I'; // Abre el asiento con la 'I'
-        let apunte = 'COBROS ' + ' ' + nombreCobrador(j) + ' ' + fecha.substring(0,5); // Descripción del apunte, se usa 'COBORS FACTURAS + COBRADOR + DIA-MES
+        let apunte = 'COBROS ' + nombreCobrador(j) + ' ' + fecha.substring(0,5); // Descripción del apunte, se usa 'COBORS FACTURAS + COBRADOR + DIA-MES
         let importe = 0; // Importe, después se le debe sumar cada importe de las líneas del asiento
 
         // Suma los importe del mismo asiento
@@ -180,12 +181,14 @@ function anadeLinea(objeto)
         let indicador = 'N'; // Indicador de asiento no procesado 'N'
         
         // Inserta la línea en el objeto de archivo
-        datafile.push(createLine(formato,empresa,fecha,registro,cuenta,descripcion,tipo,referencia,linea,apunte,importe,reserva,moneda,indicador));
+        datafile.push(crearLinea(formato,empresa,fecha,registro,cuenta,descripcion,tipo,referencia,linea,apunte,importe,reserva,moneda,indicador));
 
         let facturaTotales = 0;
         
         for (let l in objeto[i][j][k])
         {
+          // Crea los apuntes dentro cada asiento (linea 'M'). Van en el Haber. Con un último apunte que cierra el asiento (Linea 'U')
+          
           facturaTotales += 1;
 
           let formato = '4';
@@ -223,67 +226,71 @@ function anadeLinea(objeto)
           }
           importe = signo + relleno  + importe; // Junta el relleno con el importe
 
-          console.log(importe);
-
           let reserva = '';
           let moneda = 'E';
           let indicador = 'N';
           
-          datafile.push(createLine(formato,empresa,fecha,registro,cuenta,descripcion,tipo,referencia,linea,apunte,importe,reserva,moneda,indicador));
+          datafile.push(crearLinea(formato,empresa,fecha,registro,cuenta,descripcion,tipo,referencia,linea,apunte,importe,reserva,moneda,indicador));
         };
       };
     };
   };
-  console.log(objeto);
 }
 
-function createLine(formato,empresa,fecha,registro,cuenta,descripcion,tipo,referencia,linea,apunte,importe,reserva,moneda,indicador)
+function crearLinea(formato,empresa,fecha,registro,cuenta,descripcion,tipo,referencia,linea,apunte,importe,reserva,moneda,indicador)
 {
-  let finalLine = '';
-  finalLine += formato; // Constante '4'
-  finalLine += empresa; // Constante '00026' - Bodega Gayda
-  finalLine += fecha.slice(6, 10);  // año
-  finalLine += fecha.slice(3, 5);   // mes
-  finalLine += fecha.slice(0, 2);   // dia
-  finalLine += registro; 			    // Tipo de registro constante '0'
+  let fila = '';
+  fila += formato; // Constante '4'
+  fila += empresa; // Constante '00026' - Bodega Gayda
+  fila += fecha.slice(6, 10);  // año
+  fila += fecha.slice(3, 5);   // mes
+  fila += fecha.slice(0, 2);   // dia
+  fila += registro; 			    // Tipo de registro constante '0'
 
-  while (cuenta.length < 12) // Cuenta contable 
+  while (cuenta.length < 12) // Cuenta contable
   {
     cuenta += '0';
   }
-  finalLine += cuenta;     
+  fila += cuenta;     
 
-  while (descripcion.length < 30) { // Descripción cuenta, normalmente vacío
+   // Descripción de la cuenta, normalmente vacío
+  while (descripcion.length < 30)
+  {
       descripcion += ' ';
   }
-  finalLine += descripcion;
+  fila += descripcion;
 
-  finalLine += tipo; 	// Tipo de importe D/H
+  fila += tipo; 	// Tipo de importe, Debe o Haber, D/H
   
-	while (referencia.length < 10) { // Referencia del Documento, es el número de factura
+  // Referencia del Documento, es el número de factura
+	while (referencia.length < 10)
+  { 
   	referencia += ' ';
 	}
-  finalLine += referencia;
+  fila += referencia;
   
-  finalLine += linea;	//I = Inicio apunte (Primera línea del asiento)  M = Medio apunte (Líneas intermedias)  U = Ultimo
+  fila += linea;	//I = Inicio apunte (Primera línea del asiento)  M = Medio apunte (Líneas intermedias)  U = Ultimo
 
   apunte = apunte.substring(0,29); // Descripción del apunte, 'PAGO + factura + nombre'
-	while (apunte.length < 30) {
+	while (apunte.length < 30)
+  {
   	apunte += ' ';
 	}
-  finalLine += apunte;
+  fila += apunte;
   
-  finalLine += importe;
+  fila += importe; // El importe sin modificaciones
   
-  while (reserva.length < 139) {
+  // Espacio reservado por A3, todo en blanco
+  while (reserva.length < 139)
+  {
   	reserva += ' ';
 	}
-  finalLine += reserva;
+  fila += reserva;
   
-  finalLine += moneda;		// Moneda 'E', euros
-  finalLine += indicador; // 'N', no generado
+  fila += moneda;		// Moneda 'E', euros
+  fila += indicador; // 'N', no generado
   
-  return finalLine;
+  return fila;
 }
 
 function crearTabla(objeto)
@@ -385,16 +392,16 @@ function nombreCobrador(nombre)
 {
   switch (nombre) {
     case '1':
-      text = 'María Reyes';
+      text = 'Maria Reyes';
       break;
     case '2':
-      text = 'Juan Álvarez';
+      text = 'Juan Alvarez';
       break;
     case '3':
       text = 'Yonatan Marrero';
       break;
     case '4':
-      text = 'Manuel González';
+      text = 'Manuel Gonzalez';
       break;
     case '5':
       text = 'Dani';
@@ -412,16 +419,16 @@ function nombreCobrador(nombre)
       text = 'Tino';
       break;
     case '11':
-      text = 'Raúl Cabañas';
+      text = 'Raul Cabanas';
       break;
     case '12':
-      text = 'Camión';
+      text = 'Camion';
       break;
     case '13':
-      text = 'Christian Alayón';
+      text = 'Christian Alayon';
       break;           
     case '16':
-      text = 'Juan García';
+      text = 'Juan Garcia';
       break;
     case '99':
       text = 'Transferencias';
